@@ -1,0 +1,42 @@
+# Compiled files and output
+*.class
+*.jar
+*.war
+*.zip
+
+# Temporary and backup files
+*.swp
+*.swo
+*.bak
+*.tmp
+*~
+
+# Editor/IDE files
+.idea/
+.vscode/
+*.iml
+
+# OS-specific files
+.DS_Store
+Thumbs.db
+
+# Leiningen-specific files
+/target/
+/.lein-repl-history
+.lein-credentials.clj.gpg
+
+# LSP and clj-kondo cache
+.lsp/.cache/
+.clj-kondo/.cache/
+
+# Logs
+*.log
+/debug.log
+
+# Build artifacts
+tranquil-*-standalone.jar
+
+# Local configuration
+.env
+.env.local
+~/.config/tranquil/
