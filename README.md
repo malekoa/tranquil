@@ -99,7 +99,7 @@ Here are planned improvements for tranquil:
    - Allow users to manage and update configuration via CLI commands.
 
 6. **Add Logging**:
-   - Introduce a logging system to aid debugging and monitor usage.
+   - Introduce a logging system (using [telemere](https://github.com/taoensso/telemere)) to aid debugging and monitor usage.
 
 7. **Documentation**:
    - Expand this README with detailed usage examples and development guides.
