@@ -89,7 +89,7 @@ Here are planned improvements for tranquil:
 2. **Improve Error Handling**:
    - Provide detailed messages for different failure scenarios (e.g., network errors, invalid API responses).
 
-3. **Extend Poem Types**:
+3. ~~Extend Poem Types~~ ✅ *(Completed)*
    - Add support for more types of poems, such as ballads or odes.
 
 4. **Add Prebuilt Releases**:
