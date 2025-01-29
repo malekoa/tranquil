@@ -1,9 +1,10 @@
 (ns tranquil.core
   (:require
-   [clojure.tools.cli :refer [parse-opts]]
+   [clojure.data.json :as json]
    [clojure.java.io :as io]
-   [wkok.openai-clojure.api :as openai]
-   [clojure.data.json :as json])
+   [clojure.string :as string]
+   [clojure.tools.cli :refer [parse-opts]]
+   [wkok.openai-clojure.api :as openai])
   (:gen-class))
 
 ;; CLI options
@@ -12,6 +13,19 @@
    ["-v" "--version" "Show version"]
    ["-t" "--type TYPE" "Specify the type of poem (e.g., haiku, sonnet, limerick)" :required true]
    ["-p" "--prompt PROMPT" "What the poem should be about (optional)."]])
+
+(defn usage []
+  (let [formatted-options (string/join "\n"
+                                       (map (fn [[short long desc]]
+                                              (format "  %-4s %-16s %s"
+                                                      (or short "") (or long "") desc))
+                                            cli-options))]
+    (str "Usage: tranquil [argument] [options]\n\n"
+         "Arguments:\n"
+         "  poem             Generate a poem of the specified type.\n\n"
+         "Options:\n"
+         formatted-options)))
+
 
 (def config-file-path
   (str (System/getProperty "user.home") "/.config/tranquil/config.json"))
@@ -93,16 +107,22 @@
           (key-invalid))))
     (create-config)))
 
+(def poem-types [ "haiku" "sonnet" "limerick" "tanka" "cinquain" "epigram" "triolet" "monostich" ])
 
 (defn poem
   "Generate a poem of the specified type and prompt."
   [type prompt]
   (let [api-key (get-api-key)
         base-prompt (case type
-                      "haiku" "Write a haiku"
-                      "sonnet" "Write a sonnet"
-                      "limerick" "Write a limerick"
-                      (throw (IllegalArgumentException. (str "Invalid type: " type))))
+                      "haiku" "Write a haiku (A 3-line poem with a 5-7-5 syllable structure)"
+                      "sonnet" "Write a sonnet (A 14-line poem with a set rhyme scheme, typically exploring themes of love, beauty, or philosophy)"
+                      "limerick" "Write a limerick (A humorous, five-line poem with an AABBA rhyme scheme)"
+                      "tanka" "Write a tanka (A 5-line poem with a 5-7-5-7-7 syllable pattern)"
+                      "cinquain" "Write a cinquain (A 5-line poem with a 2-4-6-8-2 syllable structure)"
+                      "epigram" "Write an epigram (A witty, often satirical, short poem with a punchline)"
+                      "triolet" "Write a triolet (An 8-line poem where the 1st, 4th, and 7th lines are identical, and the 2nd and 8th lines repeat)"
+                      "monostich" "Write a monostich (A single-line poem)"
+                      (throw (IllegalArgumentException. (str "Invalid type: " type ". Must be one of: " poem-types))))
         final-prompt (if prompt
                        (str base-prompt " about " prompt ".")
                        (str base-prompt " on any topic."))
@@ -115,13 +135,16 @@
 
 
 (defn -main [& args]
-  (let [{:keys [options _ errors summary]}
+  (let [{:keys [options arguments errors]}
         (parse-opts args cli-options)
         type (:type options)
         prompt (:prompt options)]
     (cond
-      (:help options) (println summary)
+      (:help options) (println (usage))
       (:version options) (println "tranquil - version 0.0.1")
+      (not= 1 (count arguments)) (do
+                         (println "Error: argument is required. Use --help for usage.")
+                         (System/exit 1))
       (nil? type) (do
                     (println "Error: --type is required. Use --help for usage.")
                     (System/exit 1))
