@@ -1,11 +1,12 @@
 (ns tranquil.core
-  (:require
-   [clojure.data.json :as json]
-   [clojure.java.io :as io]
-   [clojure.string :as string]
-   [clojure.tools.cli :refer [parse-opts]]
-   [wkok.openai-clojure.api :as openai])
+  (:require [clojure.data.json :as json]
+            [clojure.java.io :as io]
+            [clojure.string :as string]
+            [clojure.tools.cli :refer [parse-opts]]
+            [wkok.openai-clojure.api :as openai]
+            [taoensso.telemere :as t])
   (:gen-class))
+
 
 ;; CLI options
 (def cli-options
@@ -107,7 +108,7 @@
           (key-invalid))))
     (create-config)))
 
-(def poem-types [ "haiku" "sonnet" "limerick" "tanka" "cinquain" "epigram" "triolet" "monostich" ])
+(def poem-types ["haiku" "sonnet" "limerick" "tanka" "cinquain" "epigram" "triolet" "monostich"])
 
 (defn poem
   "Generate a poem of the specified type and prompt."
@@ -127,14 +128,15 @@
                        (str base-prompt " about " prompt ".")
                        (str base-prompt " on any topic."))
         response (openai/create-chat-completion
-                    {:model "gpt-4o-mini"
-                     :messages [{:role "system" :content "You are a world-renowned poet, skilled in various forms of poetry."}
-                                {:role "user" :content final-prompt}]}
-                    {:api-key api-key})]
+                  {:model "gpt-4o-mini"
+                   :messages [{:role "system" :content "You are a world-renowned poet, skilled in various forms of poetry."}
+                              {:role "user" :content final-prompt}]}
+                  {:api-key api-key})]
     (println (((first (:choices response)) :message) :content))))
 
 
 (defn -main [& args]
+  (t/call-on-shutdown! t/stop-handlers!) ;; This calls t/stop-handlers! to flush their buffers before the jvm shuts down.
   (let [{:keys [options arguments errors]}
         (parse-opts args cli-options)
         type (:type options)
@@ -143,8 +145,9 @@
       (:help options) (println (usage))
       (:version options) (println "tranquil - version 0.0.1")
       (not= 1 (count arguments)) (do
-                         (println "Error: argument is required. Use --help for usage.")
-                         (System/exit 1))
+                                   (t/log! :error "Incorrect number of arguments.")
+                                   (println "Error: incorrect number of arguments. Use --help for usage.")
+                                   (System/exit 1))
       (nil? type) (do
                     (println "Error: --type is required. Use --help for usage.")
                     (System/exit 1))
