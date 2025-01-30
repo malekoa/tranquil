@@ -7,6 +7,19 @@
             [taoensso.telemere :as t])
   (:gen-class))
 
+(def log-file-path
+  (str (System/getProperty "user.home") "/.config/tranquil/tranquil.log"))
+
+(defn telemere-setup []
+  (let [existing-handlers (t/get-handlers)
+        log-config {:path log-file-path
+                    :gzip-archives? true}]
+    ;; remove all default console handlers
+    (doseq [handler (keys existing-handlers)]
+      (t/remove-handler! handler))
+    ;; add handler:file
+    (t/add-handler! :file-handler (t/handler:file log-config))
+))
 
 ;; CLI options
 (def cli-options
@@ -136,6 +149,7 @@
 
 
 (defn -main [& args]
+  (telemere-setup)
   (t/call-on-shutdown! t/stop-handlers!) ;; This calls t/stop-handlers! to flush their buffers before the jvm shuts down.
   (let [{:keys [options arguments errors]}
         (parse-opts args cli-options)
